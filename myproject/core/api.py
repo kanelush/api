@@ -11,7 +11,7 @@ api = NinjaAPI()
 #TBK
 commerce_code = '597043568497'
 api_key = '42bdb1c2d4175e67bc45257ac14c03e7'
-return_url = "https://crypton.cl"
+return_url = "mydomain.com"
 tx = Transaction(WebpayOptions(commerce_code, api_key, IntegrationType.LIVE))
 
 #API urls
