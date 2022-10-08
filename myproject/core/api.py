@@ -1,9 +1,10 @@
 from ninja import NinjaAPI
-from core.models import Category, Negocios, Contact, Competencia, Producto, Token, PurchaseData, Cart
+from core.models import Category, Negocios, Contact, Competencia, Producto, Token, PurchaseData, Cart, ECCategoria, ECNegocios, ECProducto, ECContact, ProductoImage
 from typing import List
-from core.schema import NegocioSchema, NotFoundSchema, ContactSchema, CompetenciaSchema, ProductoSchema, TokenSchema, PurchaseDataSchema, CartSchema
+from core.schema import NegocioSchema, NotFoundSchema, ContactSchema, CompetenciaSchema, ProductoSchema, TokenSchema, PurchaseDataSchema, CartSchema, ECCategoriaSchema, ECNegociosSchema, ECProductoSchema, ECContactSchema, ProductoImageSchema
 from transbank.webpay.webpay_plus.transaction import Transaction, WebpayOptions
 from transbank.common.integration_type import IntegrationType
+from django.shortcuts import get_object_or_404
 
 #Init ninja API
 api = NinjaAPI()
@@ -11,7 +12,7 @@ api = NinjaAPI()
 #TBK
 commerce_code = '597043568497'
 api_key = '42bdb1c2d4175e67bc45257ac14c03e7'
-return_url = "mydomain.com"
+return_url = "https://chillin.cl/exito"
 tx = Transaction(WebpayOptions(commerce_code, api_key, IntegrationType.LIVE))
 
 #API urls
@@ -48,6 +49,63 @@ def create_cart(request, cart: CartSchema):
     print("This is cart ",cart)
 
     return cart
+
+@api.put("/cart/{cart_id}", response={200: CartSchema, 404:NotFoundSchema})
+def update_cart(request, cart_id: int, data: CartSchema):
+    try:
+        # cart = Cart.objects.get(pk=cart_id)
+        cart = get_object_or_404(Cart, id=cart_id)
+        print("CART--->", cart.__dict__)
+        print("DATAAA---->", data.dict().items())
+        for attribute, value in data.dict().items():
+             setattr(cart, attribute, value)
+             print("atr-->", attribute)
+             print("val-->", value)
+             print("cartyy-->", cart.buy_order)
+
+        resp = tx.create(cart.buy_order, cart.session_id, cart.total_price, return_url)
+        token = resp['token']
+        url = resp['url']
+        print("IS IT RUNNIN OR NAH?------>iddd",resp)
+        cart.token = token
+        cart.url = url
+        cart.save()
+        return 200, cart
+    except Cart.DoesNotExist as e:
+        return 404, {"message": "Cart no existe"}
+
+@api.get("/cart/{cart_id}", response={200:CartSchema, 404:NotFoundSchema})
+def cart_detail(request, cart_id: int):
+    try:
+        cart = Cart.objects.get(pk=cart_id)
+        
+        return 200, cart
+    except Cart.DoesNotExist as e:
+        return 404, {"message": "Cart no existe"}
+
+@api.put("/cart/{cart_id}", response={200: CartSchema, 404:NotFoundSchema})
+def update_cart(request, cart_id: int, data: CartSchema):
+    try:
+        # cart = Cart.objects.get(pk=cart_id)
+        cart = get_object_or_404(Cart, id=cart_id)
+        print("CART--->", cart.__dict__)
+        print("DATAAA---->", data.dict().items())
+        for attribute, value in data.dict().items():
+             setattr(cart, attribute, value)
+             print("atr-->", attribute)
+             print("val-->", value)
+             print("cartyy-->", cart.buy_order)
+
+        resp = tx.create(cart.buy_order, cart.session_id, cart.total_price, return_url)
+        token = resp['token']
+        url = resp['url']
+        print("IS IT RUNNIN OR NAH?------>iddd",resp)
+        cart.token = token
+        cart.url = url
+        cart.save()
+        return 200, cart
+    except Cart.DoesNotExist as e:
+        return 404, {"message": "Cart no existe"}
 
 @api.post("/contact", response={201: ContactSchema})
 def create_contact(request, contact: ContactSchema):
@@ -137,6 +195,22 @@ def producto(request, producto_id: int):
         return 200, producto
     except Producto.DoesNotExist as e:
         return 404, {"message": "Producto no existe"}
+#images by foreign key
+@api.get("/productos-images", response=List[ProductoImageSchema])
+def productos_images(request):
+    productos_images = ProductoImage.objects.all()
+   
+    return ProductoImage.objects.all()
+
+
+@api.get("/productos-images/sorted/{producto_id}", response=List[ProductoImageSchema])
+def productosimgfilt(request, producto_id: int):
+    try:
+        producto_img = ProductoImage.objects.filter(producto_id=producto_id)
+        return 200, producto_img
+    except ProductoImage.DoesNotExist as e:
+        return 404, {"message": "Producto no existe"}
+
 
 @api.get("/tokens", response=List[TokenSchema])
 def tokens(request):
@@ -160,3 +234,72 @@ def create_purchase(request, purchasedata: PurchaseDataSchema):
     purchasedata = PurchaseData.objects.create(**purchasedata.dict())
     print("This is purchase Data winning winning i feel fantastic and powerful! ",purchasedata)
     return purchasedata
+
+
+
+###ENCALBUCO API ROUTES###
+@api.get("/encalbuco/negocios", response=List[ECNegociosSchema])
+def ecnegocios(request):
+    return ECNegocios.objects.all()
+
+@api.get("/encalbuco/negocios/{ecnegocio_id}", response={200: ECNegociosSchema, 404:NotFoundSchema})
+def ecnegocio(request, ecnegocio_id: int):
+    try:
+        ecnegocio = ECNegocios.objects.get(pk=ecnegocio_id)
+        return 200, ecnegocio
+    except ECNegocios.DoesNotExist as e:
+        return 404, {"message": "ECNegocio no existe"}
+
+@api.post("/encalbuco/negocios", response={201: ECNegociosSchema})
+def create_ecnegocio(request, ecnegocio: ECNegociosSchema):
+    ecnegocio = ECNegocios.objects.create(**ecnegocio.dict())
+    return ecnegocio
+
+@api.put("/encalbuco/negocios/{ecnegocio_id}", response={200: ECNegociosSchema, 404:NotFoundSchema})
+def change_ecnegocio(request, ecnegocio_id: int, data: ECNegociosSchema):
+    try:
+        ecnegocio = ECNegocios.objects.get(pk=ecnegocio_id)
+        for attribute, value in data.dict().items():
+             setattr(ecnegocio, attribute, value)
+        ecnegocio.save()
+        return 200, ecnegocio
+    except ECNegocios.DoesNotExist as e:
+        return 404, {"message": "ECNegocio no existe"}
+         
+@api.delete("/encalbuco/negocios/{ecnegocio_id}", response={200:None, 404:NotFoundSchema})
+def delete_ecnegocio(request, ecnegocio_id: int, data: ECNegociosSchema):
+    try:
+        ecnegocio = ECNegocios.objects.get(pk=ecnegocio_id)
+        ecnegocio.delete()
+        return 200 
+    except ECNegocios.DoesNotExist as e:
+        return 404, {"message": "ECNegocio no existe"}
+
+#API ROUTE FOR PRODUCTO
+@api.get("/encalbuco/productos", response=List[ECProductoSchema])
+def ecproductos(request):
+    ecproductos = ECProducto.objects.all()
+    return ecproductos
+
+@api.get("/encalbuco/productos/{ecproducto_id}", response={200:ECProductoSchema, 404:NotFoundSchema})
+def ecproducto(request, ecproducto_id: int):
+    try:
+        ecproducto = ECProducto.objects.get(pk=ecproducto_id)
+        return 200, ecproducto
+    except ECProducto.DoesNotExist as e:
+        return 404, {"message": "ECProducto no existe"}
+
+@api.get("/encalbuco/productos/sorted/{ecnegocio_parent}", response=List[ECProductoSchema])
+def ecproductosfilt(request, ecnegocio_parent: int):
+    try:
+        ecproducto = ECProducto.objects.filter(ecnegocio_parent=ecnegocio_parent)
+        return 200, ecproducto
+    except ECProducto.DoesNotExist as e:
+        return 404, {"message": "ECProducto no existe"}
+
+
+#CONTACT ROUTE API
+@api.post("/encalbuco/contact", response={201: ECContactSchema})
+def create_eccontact(request, eccontact: ECContactSchema):
+    eccontact = ECContact.objects.create(**eccontact.dict())
+    return eccontact

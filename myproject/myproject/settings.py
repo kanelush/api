@@ -31,7 +31,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG')
-ALLOWED_HOSTS = ['django', 'chillin.cl', 'www.chillin.cl']
+ALLOWED_HOSTS = ['django', 'crypton.cl', 'www.crypton.cl']
 
 
 # Application definition
@@ -63,15 +63,20 @@ MIDDLEWARE = [
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS=['https://*.chillin.cl']
+CSRF_TRUSTED_ORIGINS=['https://crypton.cl', 'https://*.crypton.cl','http://localhost', 'https://*.chillin.cl', 'http://159.203.108.205', 'http://172.17.0.1']
 GRAPHENE = {
     "SCHEMA": "core.schema.schema"
 }
 CORS_ORIGIN_WHITELIST = (
     'https://www.chillin.cl',
     'https://chillin.cl',
+    'https://crypton.cl',
+    'https://www.crypton.cl',
+    'http://159.203.108.205',
+    'http://172.17.0.1',
 )
 ROOT_URLCONF = 'myproject.urls'
+
 
 TEMPLATES = [
     {
