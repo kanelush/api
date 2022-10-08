@@ -1,7 +1,30 @@
 import graphene
 from graphene_django import DjangoObjectType
-from .models import Category, Negocios, Contact, Competencia, Producto, Token, PurchaseData, Cart
+from .models import Category, Negocios, Contact, Competencia, Producto, Token, PurchaseData, Cart, ECCategoria, ECNegocios, ECProducto, ECContact, ProductoImage
 from ninja import Schema, ModelSchema
+
+
+#EC SCHEMAS
+class ECContactSchema(ModelSchema):
+    class Config:
+        model = ECContact
+        model_fields = '__all__'
+
+class ECProductoSchema(ModelSchema):
+    class Config:
+        model = ECProducto
+        model_fields = '__all__'
+
+class ECNegociosSchema(ModelSchema):
+    class Config:
+        model = ECNegocios
+        model_fields = '__all__'
+
+class ECCategoriaSchema(ModelSchema):
+    class Config:
+        model = ECCategoria
+        model_fields = '__all__'
+###
 
 class ContactSchema(ModelSchema):
     class Config:
@@ -30,6 +53,11 @@ class NegocioSchema(Schema):
 class ProductoSchema(ModelSchema):
     class Config:
         model = Producto
+        model_fields = '__all__'
+
+class ProductoImageSchema(ModelSchema):
+    class Config:
+        model = ProductoImage
         model_fields = '__all__'
 
 class TokenSchema(ModelSchema):
